@@ -1,7 +1,10 @@
 import spacy
 import PrepareBibleData
 
-def tokenizer(sentence):
+#################################################################################################################
+### Other Functions
+
+def Tokenizer(sentence):
     # List of lines to compare
     # Load the SpaCy English language model
     nlp = spacy.load("en_core_web_sm")
@@ -24,7 +27,7 @@ def CreateBibleTokens(json_filename):
         for chapter in Bible[book].keys(): 
             ESV_Bible_tokens[book][chapter] = {}
             for verse in Bible[book][chapter].keys():
-                ESV_Bible_tokens[book][chapter][verse] = tokenizer(Bible[book][chapter][verse])
+                ESV_Bible_tokens[book][chapter][verse] = Tokenizer(Bible[book][chapter][verse])
     PrepareBibleData.SaveJSONData(ESV_Bible_tokens,json_filename)
     return Tokens
 
@@ -35,6 +38,9 @@ def CreateOrLoad(json_filename,create_or_load_string='load'):
     else:
         Tokens = PrepareBibleData.LoadJSONData(json_filename)
     return Tokens
+
+#################################################################################################################
+### Main Functions
 
 #The main function is the driver for the code
 if __name__ == "__main__":  
