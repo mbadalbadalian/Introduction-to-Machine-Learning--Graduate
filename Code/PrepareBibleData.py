@@ -91,22 +91,32 @@ def CreateOrLoad(Bible_xml_filename,dictionary_filename,txt_filename,create_or_l
         ESV_Bible_txt = LoadTxtData(txt_filename)
     return ESV_Bible_dict,ESV_Bible_txt
 
+def GetBibleLines():
+    Bible_xml_filename = "Initial_Data\\ESVBible_Database.xml"
+    Bible_dictionary_filename = "Additional_Data\\ESV_Bible_Dictionary.json"
+    Bible_txt_filename = "Additional_Data\\ESV_Bible_Text.txt"
+    Bible_list_filename = "Additional_Data\\ESV_Bible_List.json"
+    create_or_load_string = 'Create'
+    ESV_Bible_dict,ESV_Bible_txt = CreateOrLoad(Bible_xml_filename,Bible_dictionary_filename,Bible_txt_filename,create_or_load_string)
+    return ESV_Bible_dict
+
 #################################################################################################################
 ### Main Functions
+#The main function is the driver for the code
+if __name__ == "__main__":
+    #################################################################################################################
+    ### Variables
 
-#################################################################################################################
-### Variables
+    Bible_xml_filename = "Initial_Data\\ESVBible_Database.xml"
+    Bible_dictionary_filename = "Additional_Data\\ESV_Bible_Dictionary.json"
+    Bible_txt_filename = "Additional_Data\\ESV_Bible_Text.txt"
+    Bible_list_filename = "Additional_Data\\ESV_Bible_List.json"
+    create_or_load_string = 'Create'
 
-Bible_xml_filename = "Initial_Data\\ESVBible_Database.xml"
-Bible_dictionary_filename = "Additional_Data\\ESV_Bible_Dictionary.json"
-Bible_txt_filename = "Additional_Data\\ESV_Bible_Text.txt"
-Bible_list_filename = "Additional_Data\\ESV_Bible_List.json"
-create_or_load_string = 'Create'
+    #################################################################################################################
+    ### Main Code
 
-#################################################################################################################
-### Main Code
+    ESV_Bible_dict,ESV_Bible_txt = CreateOrLoad(Bible_xml_filename,Bible_dictionary_filename,Bible_txt_filename,create_or_load_string)
+    print(ESV_Bible_dict['Genesis']['1']['1'])
 
-ESV_Bible_dict,ESV_Bible_txt = CreateOrLoad(Bible_xml_filename,Bible_dictionary_filename,Bible_txt_filename,create_or_load_string)
-print(ESV_Bible_dict['Genesis']['1']['1'])
 
-print("Hello")
