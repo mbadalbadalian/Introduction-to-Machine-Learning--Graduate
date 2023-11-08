@@ -1,6 +1,6 @@
 import numpy as np
 import xml.etree.ElementTree as ET
-import json,re
+import json
 from collections import OrderedDict
 
 #################################################################################################################
@@ -107,4 +107,5 @@ create_or_load_string = 'Create'
 ### Main Code
 
 ESV_Bible_dict,ESV_Bible_txt = CreateOrLoad(Bible_xml_filename,Bible_dictionary_filename,Bible_txt_filename,create_or_load_string)
+print(ESV_Bible_dict['Genesis']['1']['1'])
 
