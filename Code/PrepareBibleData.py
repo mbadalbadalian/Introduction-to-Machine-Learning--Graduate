@@ -70,7 +70,7 @@ def CreateBibleDictionary(xml_filename,dictionary_filename):
 #ProcessXML Function
 def ProcessXML(xml_parsed_data_root):
     output = OrderedDict()
-    
+
     #Loop through each book, chapter and verse
     for book in xml_parsed_data_root.findall('.//b'):
         book_number = book.get('n')
@@ -110,7 +110,7 @@ Bible_xml_filename = "Initial_Data\\ESVBible_Database.xml"
 Bible_dictionary_filename = "Additional_Data\\ESV_Bible_Dictionary.json"
 Bible_txt_filename = "Additional_Data\\ESV_Bible_Text.txt"
 Bible_list_filename = "Additional_Data\\ESV_Bible_List.json"
-create_or_load_string = 'Create'
+create_or_load_string = 'Load'
 
 #################################################################################################################
 ### Main Code
