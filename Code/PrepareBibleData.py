@@ -36,10 +36,10 @@ def LoadTxtData(txt_filename):
 
 #CreateAndSaveTxtFileFromList Function
 def CreateAndSaveTxtFileFromList(list_data,txt_filename):
-    #Writine a txt file from a list
-    with open(txt_filename, 'w', encoding='utf-8') as txt_file:
-        for item in list_data:
-            txt_file.write(item + '\n')
+    #Writing a txt file from a list
+    with open(txt_filename, 'w') as txt_file:
+        for verse,text in list_data.items():
+            txt_file.write(f'{verse}: {text}\n')
     return txt_file
 
 #CreateBibleDictionary Function
@@ -91,40 +91,38 @@ def CreateBibleText(xml_filename,txt_filename):
     return ESV_Bible_txt
 
 #CreateOrLoad Function
-def CreateOrLoad(Bible_xml_filename,dictionary_filename,txt_filename,create_or_load_string = 'load'):
+def CreateOrLoad(xml_filename,dictionary_filename,txt_filename,create_or_load_string='load'):
     if create_or_load_string in ['Create','create']:
-        ESV_Bible_dict = CreateBibleDictionary(Bible_xml_filename,Bible_dictionary_filename)
-        ESV_Bible_txt = CreateBibleText(Bible_xml_filename,Bible_txt_filename)
+        ESV_Bible_dict = CreateBibleDictionary(xml_filename,dictionary_filename)
+        ESV_Bible_txt = CreateBibleText(xml_filename,txt_filename)
     else:
         ESV_Bible_dict = LoadJSONData(dictionary_filename)
         ESV_Bible_txt = LoadTxtData(txt_filename)
     return ESV_Bible_dict,ESV_Bible_txt
 
+#GetBibleLines Function
 def GetBibleLines():
     Bible_xml_filename = "Initial_Data\\ESVBible_Database.xml"
     Bible_dictionary_filename = "Additional_Data\\ESV_Bible_Dictionary.json"
     Bible_txt_filename = "Additional_Data\\ESV_Bible_Text.txt"
-    Bible_list_filename = "Additional_Data\\ESV_Bible_List.json"
     create_or_load_string = 'Create'
     ESV_Bible_dict,ESV_Bible_txt = CreateOrLoad(Bible_xml_filename,Bible_dictionary_filename,Bible_txt_filename,create_or_load_string)
     return ESV_Bible_dict
 
 #################################################################################################################
 ### Main Functions
+
 #The main function is the driver for the code
 if __name__ == "__main__":
-    #################################################################################################################
-    ### Variables
-
+    
+    #Variables
     Bible_xml_filename = "Initial_Data\\ESVBible_Database.xml"
     Bible_dictionary_filename = "Additional_Data\\ESV_Bible_Dictionary.json"
     Bible_txt_filename = "Additional_Data\\ESV_Bible_Text.txt"
     Bible_list_filename = "Additional_Data\\ESV_Bible_List.json"
     create_or_load_string = 'Create'
 
-    #################################################################################################################
-    ### Main Code
-
+    #Main Code
     ESV_Bible_dict,ESV_Bible_txt = CreateOrLoad(Bible_xml_filename,Bible_dictionary_filename,Bible_txt_filename,create_or_load_string)
     print(ESV_Bible_dict['Genesis']['1']['1'])
 
