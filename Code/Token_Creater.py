@@ -44,7 +44,10 @@ def CreateOrLoad(json_filename,create_or_load_string='load'):
 
 #The main function is the driver for the code
 if __name__ == "__main__":  
+
+    #Variables
     json_filename = "Additional_Data\\ESV_Bible_Tokens.json"
     create_or_load_string = 'Create'
 
+    #Main Code
     Tokens = CreateOrLoad(json_filename,create_or_load_string)

@@ -124,5 +124,4 @@ if __name__ == "__main__":
 
     #Main Code
     ESV_Bible_dict,ESV_Bible_txt = CreateOrLoad(Bible_xml_filename,Bible_dictionary_filename,Bible_txt_filename,create_or_load_string)
-    print(ESV_Bible_dict['Genesis']['1']['1'])
 
