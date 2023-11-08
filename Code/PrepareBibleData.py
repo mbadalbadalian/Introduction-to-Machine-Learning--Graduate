@@ -122,22 +122,9 @@ if __name__ == "__main__":
     Bible_list_filename = "Additional_Data\\ESV_Bible_List.json"
     create_or_load_string = 'Create'
 
-<<<<<<< HEAD
     #################################################################################################################
     ### Main Code
-=======
-Bible_xml_filename = "Initial_Data\\ESVBible_Database.xml"
-Bible_dictionary_filename = "Additional_Data\\ESV_Bible_Dictionary.json"
-Bible_txt_filename = "Additional_Data\\ESV_Bible_Text.txt"
-Bible_list_filename = "Additional_Data\\ESV_Bible_List.json"
-create_or_load_string = 'Load'
->>>>>>> 50a4cad9a3128380901fea3aa368303f135a06f2
 
     ESV_Bible_dict,ESV_Bible_txt = CreateOrLoad(Bible_xml_filename,Bible_dictionary_filename,Bible_txt_filename,create_or_load_string)
     print(ESV_Bible_dict['Genesis']['1']['1'])
 
-<<<<<<< HEAD
-
-=======
-ESV_Bible_dict,ESV_Bible_txt = CreateOrLoad(Bible_xml_filename,Bible_dictionary_filename,Bible_txt_filename,create_or_load_string)
->>>>>>> 50a4cad9a3128380901fea3aa368303f135a06f2
