@@ -23,21 +23,22 @@ def CreateBibleTokens(json_filename):
     #Loop through each book, chapter and verse to get tokenized verse
     ESV_Bible_tokens = {}
     for book in Bible.keys(): 
+        print(book)
         ESV_Bible_tokens[book] = {}
         for chapter in Bible[book].keys(): 
             ESV_Bible_tokens[book][chapter] = {}
             for verse in Bible[book][chapter].keys():
                 ESV_Bible_tokens[book][chapter][verse] = Tokenizer(Bible[book][chapter][verse])
     PrepareBibleData.SaveJSONData(ESV_Bible_tokens,json_filename)
-    return Tokens
+    return ESV_Bible_tokens
 
 #CreateOrLoad Function
 def CreateOrLoad(json_filename,create_or_load_string='load'):
     if create_or_load_string in ['Create','create']:
-        Tokens = CreateBibleTokens(json_filename)
+        ESV_Bible_tokens = CreateBibleTokens(json_filename)
     else:
-        Tokens = PrepareBibleData.LoadJSONData(json_filename)
-    return Tokens
+        ESV_Bible_tokens = PrepareBibleData.LoadJSONData(json_filename)
+    return ESV_Bible_tokens
 
 #################################################################################################################
 ### Main Functions
@@ -50,4 +51,4 @@ if __name__ == "__main__":
     create_or_load_string = 'Create'
 
     #Main Code
-    Tokens = CreateOrLoad(json_filename,create_or_load_string)
+    ESV_Bible_tokens = CreateOrLoad(json_filename,create_or_load_string)
