@@ -2,6 +2,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 import json
 from collections import OrderedDict
+import pandas as pd
 
 #################################################################################################################
 ### Other Functions
@@ -90,18 +91,82 @@ def CreateBibleText(xml_filename,txt_filename):
     ESV_Bible_txt = CreateAndSaveTxtFileFromList(ESV_Bible_list,txt_filename)
     return ESV_Bible_txt
 
+#OrderedUniqueList Function
+def OrderedUniqueList(original_list):
+    seen = set()
+    ordered_unique_list = []
+    for item in original_list:
+        if item not in seen:
+            seen.add(item)
+            ordered_unique_list.append(item)
+    return ordered_unique_list
+
+def LoadDataframe(dataframe_filename):
+    dataframe_DF = pd.read_csv(dataframe_filename)
+    return dataframe_DF
+
+#CreateBibleDataframe Function
+def CreateBibleDataframe(ESV_Bible_txt,ESV_Bible_Book_id_DF_filename,ESV_Bible_DF_filename):
+    ESV_Bible_txt = ESV_Bible_txt.split('\n')
+    books = []
+    chapters = []
+    verses = []
+    texts = []
+    for current_line in ESV_Bible_txt:
+        if current_line == '':
+            continue
+        parts = current_line.split(": ")
+        
+        if len(parts[0].split(" ")) == 2:
+            book = parts[0].split(" ")[0]
+        else:            
+            first_space_index = parts[0].find(' ')           
+            second_space_index = parts[0].find(' ',first_space_index+1)
+            book = parts[0][:second_space_index].strip('"')
+            
+        chapter_verse = parts[0].split(" ")[-1]
+        chapter,verse = chapter_verse.split(':')
+            
+        book = book.strip('"')
+        chapter = int(chapter.strip('"'))
+        verse = int(verse.strip('"'))
+        text = ":".join(parts[1:]).strip()
+            
+        books.append(book)
+        chapters.append(int(chapter))
+        verses.append(int(verse))
+        texts.append(text)
+
+    unique_books = OrderedUniqueList(books)
+    books_number_list = np.arange(1,len(unique_books)+1)
+
+    ESV_Bible_Book_id_DF = pd.DataFrame({'b':unique_books,'id':books_number_list})
+    ESV_Bible_DF_original = pd.DataFrame({'b':books,'c':chapters,'v':verses,'Text':texts})
+    ESV_Bible_DF = pd.merge(ESV_Bible_Book_id_DF,ESV_Bible_DF_original,on='b',how='right')
+    ESV_Bible_DF = ESV_Bible_DF.drop(columns=['b'])
+    ESV_Bible_DF.rename(columns={'id': 'b'},inplace=True)
+    ESV_Bible_DF['id'] = (ESV_Bible_DF['v'] + ESV_Bible_DF['c']*1e3 + ESV_Bible_DF['b']*1e6).astype(int)
+    ESV_Bible_DF = ESV_Bible_DF[['id','b','c','v','Text']]
+    
+    ESV_Bible_Book_id_DF.to_csv(ESV_Bible_Book_id_DF_filename,index=False)
+    ESV_Bible_DF.to_csv(ESV_Bible_DF_filename,index=False)
+    return ESV_Bible_Book_id_DF,ESV_Bible_DF
+
 #CreateOrLoad Function
-def CreateOrLoad(xml_filename,dictionary_filename,txt_filename,create_or_load_string='load'):
+def CreateOrLoad(xml_filename,dictionary_filename,txt_filename,ESV_Bible_Book_id_DF_filename,ESV_Bible_DF_filename,create_or_load_string='load'):
     if create_or_load_string in ['Create','create']:
         ESV_Bible_dict = CreateBibleDictionary(xml_filename,dictionary_filename)
         ESV_Bible_txt = CreateBibleText(xml_filename,txt_filename)
+        ESV_Bible_Book_id_DF,ESV_Bible_DF = CreateBibleDataframe(ESV_Bible_txt,ESV_Bible_Book_id_DF_filename,ESV_Bible_DF_filename)
     else:
         ESV_Bible_dict = LoadJSONData(dictionary_filename)
         ESV_Bible_txt = LoadTxtData(txt_filename)
-    return ESV_Bible_dict,ESV_Bible_txt
+        ESV_Bible_Book_id_DF = LoadDataframe(ESV_Bible_Book_id_DF_filename)
+        ESV_Bible_DF = LoadDataframe(ESV_Bible_DF_filename)
+    return ESV_Bible_dict,ESV_Bible_txt,ESV_Bible_Book_id_DF,ESV_Bible_DF
 
-#GetBibleLines Function
-def GetBibleLines():
+#GetBiblecurrent_lines Function
+def GetBiblecurrent_lines():
     Bible_xml_filename = "Initial_Data\\ESVBible_Database.xml"
     Bible_dictionary_filename = "Additional_Data\\ESV_Bible_Dictionary.json"
     Bible_txt_filename = "Additional_Data\\ESV_Bible_Text.txt"
@@ -120,8 +185,9 @@ if __name__ == "__main__":
     Bible_dictionary_filename = "Additional_Data\\ESV_Bible_Dictionary.json"
     Bible_txt_filename = "Additional_Data\\ESV_Bible_Text.txt"
     Bible_list_filename = "Additional_Data\\ESV_Bible_List.json"
-    create_or_load_string = 'Create'
+    ESV_Bible_Book_id_DF_filename = "Additional_Data\\ESV_Bible_Book_id_DF.csv"
+    ESV_Bible_DF_filename = "Additional_Data\\ESV_Bible_DF.csv"
+    create_or_load_string = 'Load'
 
     #Main Code
-    ESV_Bible_dict,ESV_Bible_txt = CreateOrLoad(Bible_xml_filename,Bible_dictionary_filename,Bible_txt_filename,create_or_load_string)
-
+    ESV_Bible_dict,ESV_Bible_txt,ESV_Bible_Book_id_DF,ESV_Bible_DF = CreateOrLoad(Bible_xml_filename,Bible_dictionary_filename,Bible_txt_filename,ESV_Bible_Book_id_DF_filename,ESV_Bible_DF_filename,create_or_load_string)
