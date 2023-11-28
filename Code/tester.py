@@ -1,18 +1,25 @@
 from transformers import BertConfig, TFBertModel
 import tensorflow as tf
-# Building the config
-config = BertConfig()
+from transformers import AutoTokenizer
+from transformers import pipeline
+from transformers import TFAutoModel
+from transformers import AutoTokenizer
 
-# Building the model from the config
-model = TFBertModel(config)
-sequences = ["Hello!", "Cool.", "Nice!"]
-encoded_sequences = [
-    [101, 7592, 999, 102],
-    [101, 4658, 1012, 102],
-    [101, 3835, 999, 102],
+from transformers import TFAutoModelForSequenceClassification
+
+checkpoint = "distilbert-base-uncased-finetuned-sst-2-english"
+tokenizer = AutoTokenizer.from_pretrained(checkpoint)
+raw_inputs = [
+    "This is not what I want",
+    "Thanks",
+    "Correct",
+    "Noooooooo",
+    "Retry prompt",
 ]
+inputs = tokenizer(raw_inputs, padding=True, truncation=True, return_tensors="tf")
 
-
-model_inputs = tf.constant(encoded_sequences)
-output = model(model_inputs)
-print(output)
+checkpoint = "distilbert-base-uncased-finetuned-sst-2-english"
+model = TFAutoModelForSequenceClassification.from_pretrained(checkpoint)
+outputs = model(inputs)
+predictions = tf.math.softmax(outputs.logits, axis=-1)
+print([ 'neg' if max(i) == i[0] else 'pos' for i in predictions])
