@@ -33,6 +33,6 @@ if __name__ == "__main__":
     tokenized_Q_and_A_data_filepath = 'Additional_Data/Prepared_QandA_Dataset.csv'
     
     tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-    Q_and_A_dataframe = LoadCSVData(tokenized_Q_and_A_data_filepath)
+    Q_and_A_dataframe = LoadCSVData(initial_Q_and_A_data_filepath)
     tokenized_data = CreateOrLoadTokenizedData(Q_and_A_dataframe,tokenizer,tokenized_Q_and_A_data_filepath,create_or_load_string)
 
