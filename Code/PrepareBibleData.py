@@ -147,7 +147,6 @@ def CreateBibleDataframe(ESV_Bible_txt,ESV_Bible_Book_id_DF_filename,ESV_Bible_D
     ESV_Bible_DF.rename(columns={'id': 'b'},inplace=True)
     ESV_Bible_DF['id'] = (ESV_Bible_DF['v'] + ESV_Bible_DF['c']*1e3 + ESV_Bible_DF['b']*1e6).astype(int)
     ESV_Bible_DF = ESV_Bible_DF[['id','b','c','v','Text']]
-    
     ESV_Bible_Book_id_DF.to_csv(ESV_Bible_Book_id_DF_filename,index=False)
     ESV_Bible_DF.to_csv(ESV_Bible_DF_filename,index=False)
     return ESV_Bible_Book_id_DF,ESV_Bible_DF
