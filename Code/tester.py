@@ -77,6 +77,10 @@ if os.path.exists(model_folder):
 
 else:
     model = model_create()  # Assuming model_create() creates a new model instance
+    model.save_weights(model_path)
+    print("Model saved successfully.")
+
 model_use("That person was mean.", model)
-model_use("This is bad", model)
+model_use("Screw off", model)
 model_use("This is what I wanted", model)
+model_use("Die", model)
