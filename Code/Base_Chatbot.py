@@ -1,17 +1,43 @@
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
-import torch
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+# load the sentence-bert model from the HuggingFace model hub
+from transformers import AutoTokenizer, AutoModel
+from torch.nn import functional as F
+import warnings
 
-model_name = "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name)
+# To suppress all warnings
+warnings.filterwarnings("ignore")
 
-premise = "Is it fine to drink whiskey?"
-hypothesis = "God forbids alcohol to poeople"
 
-input = tokenizer(premise, hypothesis, truncation=True, return_tensors="pt")
-output = model(input["input_ids"].to(device))  # device = "cuda:0" or "cpu"
-prediction = torch.softmax(output["logits"][0], -1).tolist()
-label_names = ["entailment", "neutral", "contradiction"]
-prediction = {name: round(float(pred) * 100, 1) for pred, name in zip(prediction, label_names)}
-print(prediction)
+def zero_shot_classification(sentence,labels):
+    tokenizer = AutoTokenizer.from_pretrained('deepset/sentence_bert')
+    model = AutoModel.from_pretrained('deepset/sentence_bert')
+
+    
+
+    # run inputs through model and mean-pool over the sequence
+    # dimension to get sequence-level representations
+    inputs = tokenizer.batch_encode_plus([sentence] + labels,
+                                         return_tensors='pt',
+                                         pad_to_max_length=True)
+    input_ids = inputs['input_ids']
+    attention_mask = inputs['attention_mask']
+    output = model(input_ids, attention_mask=attention_mask)[0]
+    sentence_rep = output[:1].mean(dim=1)
+    label_reps = output[1:].mean(dim=1)
+
+    # now find the labels with the highest cosine similarities to
+    # the sentence
+    similarities = F.cosine_similarity(sentence_rep, label_reps)
+    closest = similarities.argsort(descending=True)
+    #for ind in closest:
+    #    print(f'label: {labels[ind]} \t similarity: {similarities[ind]}')
+    return labels,similarities
+
+def responses(responses,scores):
+    if max(scores)<0.4:
+        print('Again')
+    else:
+        print(responses[scores.argmax()])
+
+if __name__ == "__main__":  
+    labels = ['greeting', 'creator', 'functions', 'What you do','architecture', 'How you work','weakness']
+    zero_shot_classification('How do you do, dear sir?', labels)
