@@ -2,6 +2,7 @@ import csv
 
 def extract_columns(input_file, output_file):
     columns_to_extract = [0, 1, 6]  # 1st, 2nd, and 7th columns (0-indexed)
+    column_names = ['c', 'v', 'Text']  # New column names
 
     with open(input_file, 'r', encoding='utf-8') as csv_file:
         reader = csv.reader(csv_file)
@@ -11,9 +12,8 @@ def extract_columns(input_file, output_file):
 
     with open(output_file, 'w', newline='', encoding='utf-8') as new_csv_file:
         writer = csv.writer(new_csv_file)
-        writer.writerows(extracted_data)
-
-        writer.writerows(extracted_data)
+        writer.writerow(column_names)  # Writing the new column names
+        writer.writerows(extracted_data[1:])
 
 # Example usage:
 input_filename = 'Additional_Data/Bhagwad_Gita_Verses_English.csv'  # Replace with your input CSV filename
