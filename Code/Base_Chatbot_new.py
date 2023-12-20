@@ -3,7 +3,8 @@ from transformers import AutoTokenizer, AutoModel
 from torch.nn import functional as F
 import warnings
 import spacy
-
+import classification
+import numpy as np
 # To suppress all warnings
 warnings.filterwarnings("ignore")
 
@@ -60,7 +61,6 @@ def imp(question):
 
     # Print top N important words
     top_n = 3
-    print(f"Top {top_n} important words in the question:")
     for word, score in important_words[:top_n]:
         print(f"Word: {word}, TF-IDF Score: {score}")
     return important_words[:top_n]
@@ -98,8 +98,8 @@ def zero_shot_classification(sentence,labels):
     # the sentence
     similarities = F.cosine_similarity(sentence_rep, label_reps)
     closest = similarities.argsort(descending=True)
-    for ind in closest:
-        print(f'label: {labels[ind]} \t similarity: {similarities[ind]}')
+    #for ind in closest:
+    #    print(f'label: {labels[ind]} \t similarity: {similarities[ind]}')
     return similarities
 
 def responses(responses,scores):
@@ -109,15 +109,17 @@ def responses(responses,scores):
         print(responses[scores.argmax()])
 
 if __name__ == "__main__":  
-    labels = ['greeting', 'creator', 'functions', 'What you do','architecture', 'How you work','weakness']
-    sen = 'Who is the mother of Jesus?'
-    simil = [0] * len(labels)
+    Bible_Tokens = classification.Get_Chapter_Tokens()
+    labels = Bible_Tokens['Matthew']
+    sen = 'When did Jesus meet the devil?'
+    #simil = [0] * len(labels)
     n = Tokenizer(sen)
     words = imp(sen)
-    for i,s in words:
-        print(i)
-        sim = zero_shot_classification(i, labels)
-        simil = [x + y for x, y in zip(simil, sim)]
-    for ind in range(len(labels)):
-        print(f'label: {labels[ind]} \t similarity: {simil[ind]}')
-    
+    sen = 'devil'
+    simil = zero_shot_classification(labels[3],[sen])
+    # Assuming 'simil' is a tensor
+    simil = simil.detach().numpy()  # Detach the tensor and convert to NumPy array
+
+    argmax_index = np.argmax(simil)
+    for i in range(len(simil)):
+        print(f'label: {i} \t similarity: {simil[i]}')
