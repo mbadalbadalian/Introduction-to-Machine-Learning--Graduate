@@ -35,7 +35,8 @@ def zero_shot_classification(sentence,labels):
 def responses(responses,scores):
     score = scores.argmax()
     if scores[score]<0.4:
-        print('Again')
+        print('Sorry!! Can you be more specific.')
+        print('If your question is about the bible, please let me know')
     else:
         print(responses[score])
     return score

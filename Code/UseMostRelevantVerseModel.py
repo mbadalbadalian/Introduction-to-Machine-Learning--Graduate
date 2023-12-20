@@ -71,16 +71,18 @@ def main():
     bible_books = load_bible_books(ESV_Bible_Book_id_filepath)
 
     # Extract text and metadata columns
-    #bible_text = bible_data['Text'][bible_data['b'] == 1][bible_data['c'] == 1].tolist()
-    bible_text = bible_data['Text'].tolist()
+    #for i in range(1,67):
+    #print("i",i)
+    bible_text = bible_data['Text'][bible_data['b'] == 1].tolist()
+    #bible_text = bible_data['Text'].tolist()
 
     # Load BERT model and tokenizer
     model, tokenizer = load_bert_model_and_tokenizer()
 
     # Calculate and save Bible embeddings
     bible_embeddings = calculate_bible_embeddings(bible_text, model, tokenizer)
-    save_and_load_embeddings(bible_embeddings, 'bible_embeddings_original.pt')
-
+    filename = 'Bible_Embeddings_Relevant_Verse/bible_embeddings_'+str(1)+'.pt'
+    save_and_load_embeddings(bible_embeddings, filename)
     # Example questions
     questions = [
         "What is the first verse in the Bible?",
