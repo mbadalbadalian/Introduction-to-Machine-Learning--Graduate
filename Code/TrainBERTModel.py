@@ -75,7 +75,7 @@ def LoadCheckpoint(BERT_model,optimizer,checkpoint_path):
     return BERT_model,optimizer,start_epoch,average_train_loss_list,average_test_loss_list
 
 def CreateTrainedBERTModel(train_loader,test_loader,BERT_model_filepath,average_train_loss_filename,average_test_loss_filename,checkpoint_directory):
-    num_epochs = 3
+    num_epochs = 5
     
     BERT_model = BertForMaskedLM.from_pretrained('bert-base-uncased')
     optimizer = AdamW(BERT_model.parameters(), lr=5e-5)

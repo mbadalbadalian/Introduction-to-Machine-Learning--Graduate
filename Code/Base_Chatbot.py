@@ -33,10 +33,12 @@ def zero_shot_classification(sentence,labels):
     return labels,similarities
 
 def responses(responses,scores):
-    if max(scores)<0.4:
+    score = scores.argmax()
+    if scores[score]<0.4:
         print('Again')
     else:
-        print(responses[scores.argmax()])
+        print(responses[score])
+    return score
 
 if __name__ == "__main__":  
     labels = ['greeting', 'creator', 'functions', 'What you do','architecture', 'How you work','weakness']

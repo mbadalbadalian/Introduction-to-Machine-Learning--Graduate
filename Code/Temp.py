@@ -1,82 +1,67 @@
-import os
+from transformers import pipeline, BertForQuestionAnswering, BertTokenizer, DistilBertForQuestionAnswering, DistilBertTokenizer
 import torch
-from transformers import GPT2LMHeadModel
-from torch.utils.data import DataLoader
-from tqdm import tqdm
+import pandas as pd
 
-def CreateTrainedNLPModel(train_loader,test_loader,NLP_model_filepath,average_train_loss_filename,average_test_loss_filename):
-    num_epochs = 3
 
-    NLP_model = GPT2LMHeadModel.from_pretrained("gpt2")
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    NLP_model.to(device)
-    optimizer = torch.optim.AdamW(NLP_model.parameters(),lr=5e-5)
-    criterion = torch.nn.CrossEntropyLoss()
-    average_train_loss_list = []
-    average_test_loss_list = []
+# ... (previous code)
 
-    # Directory to save/load checkpoints
-    checkpoint_dir = "path/to/checkpoints"
-    os.makedirs(checkpoint_dir, exist_ok=True)
+def AskQuestion(context, question, fine_tuned_model, tokenizer, max_seq_length=512):
+    # Tokenize the input text
+    inputs = tokenizer(question, context, return_tensors='pt', truncation=True, max_length=max_seq_length)
 
-    # Check if there are existing checkpoints in the directory
-    existing_checkpoints = [f for f in os.listdir(checkpoint_dir) if f.startswith("checkpoint_epoch_")]
-    if existing_checkpoints:
-        # Sort checkpoints based on epoch number
-        existing_checkpoints.sort(key=lambda x: int(x.split("_")[2].split(".")[0]))
+    # Perform inference
+    with torch.no_grad():
+        outputs = fine_tuned_model(**inputs)
 
-        # Load the last checkpoint
-        last_checkpoint = existing_checkpoints[-1]
-        checkpoint_filename = os.path.join(checkpoint_dir, last_checkpoint)
-        checkpoint = torch.load(checkpoint_filename)
+    # Extract answer
+    start_logits = outputs.start_logits
+    end_logits = outputs.end_logits
 
-        # Load model and optimizer state
-        NLP_model.load_state_dict(checkpoint['model_state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        start_epoch = checkpoint['epoch']
-        best_val_loss = checkpoint['val_loss']
-        print(f"Resuming training from epoch {start_epoch + 1}, best validation loss: {best_val_loss:.4f}")
-    else:
-        start_epoch = 0
-        best_val_loss = float('inf')
+    start_index = torch.argmax(start_logits, dim=1).item()
+    end_index = torch.argmax(end_logits, dim=1).item()
 
-    for epoch in range(start_epoch, num_epochs):
-        NLP_model.train()
-        total_train_loss = 0.0
-        for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1}/{num_epochs}"):
-            # Training steps...
-            # ...
+    answer = tokenizer.convert_tokens_to_string(tokenizer.convert_ids_to_tokens(inputs['input_ids'][0][start_index:end_index+1]))
 
-        # Validation loop
-        NLP_model.eval()
-        total_test_loss = 0.0
-        with torch.no_grad():
-            for batch in tqdm(test_loader, desc="Validation"):
-                # Validation steps...
-                # ...
+    return answer
 
-        # Save checkpoint at the end of each epoch
-        checkpoint_filename = os.path.join(checkpoint_dir, f"checkpoint_epoch_{epoch + 1}.pt")
-        torch.save({
-            'epoch': epoch + 1,
-            'model_state_dict': NLP_model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'val_loss': total_test_loss / len(test_loader),  # Adjust this based on your validation loss calculation
-        }, checkpoint_filename)
+def LoadContext(ESV_Bible_DF_filepath):
+    bible_df = pd.read_csv(ESV_Bible_DF_filepath)
+    context = bible_df['Text'][bible_df['b'] == 40][bible_df['c'] == 1].str.cat(sep=' ')
+    #context = bible_df['Text'].str.cat(sep=' ')
+    return context
 
-        print(f"Epoch {epoch + 1}/{num_epochs}, Validation Loss: {total_test_loss / len(test_loader):.4f}, Checkpoint saved at {checkpoint_filename}")
+def answer_question(context, question):
+    question_answering_pipeline = pipeline('question-answering', model='distilbert-base-cased-distilled-squad', tokenizer='distilbert-base-cased-distilled-squad')
+    result = question_answering_pipeline(context=context, question=question)
+    return result['answer']
 
-        # Update best validation loss and early stopping criteria if needed
-        if total_test_loss < best_val_loss:
-            best_val_loss = total_test_loss
-            # Save the best model separately if needed
-            torch.save(NLP_model.state_dict(), os.path.join(checkpoint_dir, "best_model.pt"))
+if __name__ == "__main__":
+    ESV_Bible_DF_filepath = 'Additional_Data/ESV_Bible_DF.csv'
+    ditilBERT_model_fine_tuned_filepath = 'Models/DistilBERT_model_fine_tuned'
+    BERT_model_fine_tuned_filepath = 'Models/BERT_model_fine_tuned'
+    
+    print("**********************Using DistilBERT************************")
+    fine_tuned_model = DistilBertForQuestionAnswering.from_pretrained(ditilBERT_model_fine_tuned_filepath)
+    tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-cased')
 
-        average_train_loss_list.append(total_train_loss / len(train_loader))
-        average_test_loss_list.append(total_test_loss / len(test_loader))
+    context = LoadContext(ESV_Bible_DF_filepath)
+    #context = 'This is the genealogy of Jesus the Messiah the son of David, the son of Abraham: Abraham was the father of Isaac, Isaac the father of Jacob, Jacob the father of Judah and his brothers, Judah the father of Perez and Zerah, whose mother was Tamar, Perez the father of Hezron, Hezron the father of Ram, Ram the father of Amminadab, Amminadab the father of Nahshon, Nahshon the father of Salmon, Salmon the father of Boaz, whose mother was Rahab, Boaz the father of Obed, whose mother was Ruth, Obed the father of Jesse, and Jesse the father of King David. David was the father of Solomon, whose mother had been Uriah’s wife, Solomon the father of Rehoboam, Rehoboam the father of Abijah, Abijah the father of Asa, Asa the father of Jehoshaphat, Jehoshaphat the father of Jehoram, Jehoram the father of Uzziah, Uzziah the father of Jotham, Jotham the father of Ahaz, Ahaz the father of Hezekiah, Hezekiah the father of Manasseh, Manasseh the father of Amon, Amon the father of Josiah,'
+    question = "Who is Jesus?"
 
-    NLP_model.save_pretrained(NLP_model_filepath)
-    SavePKL(average_train_loss_list, average_train_loss_filename)
-    SavePKL(average_test_loss_list, average_test_loss_filename)
+    #answer_context = answer_question_with_context(context, question)
+    answer = answer_question(context, question)
+    print("Question:", question)
+    print("Answer:", answer)
+    
+    ################################################################
+    print("**********************Using Bert************************")
+    fine_tuned_model = BertForQuestionAnswering.from_pretrained(BERT_model_fine_tuned_filepath)
+    tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
 
-    return NLP_model, average_train_loss_list, average_test_loss_list
+    #answer_context = answer_question_with_context(context, question)
+    answer = answer_question(context, question)
+    print("Question:", question)
+    print("Answer:", answer)
+    
+    
+    

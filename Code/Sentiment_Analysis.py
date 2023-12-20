@@ -11,7 +11,10 @@ def model_create():
         "Thanks",
         "Correct",
         "Noooooooo",
-        "Retry",
+        "Repeat",
+        "Nice",
+        "Redo",
+        "I rejoice in the answer"
         "Retry"  # Adding "Retry" as a negative example
     ]
 
@@ -20,8 +23,12 @@ def model_create():
         ("This is not what I want", 0),  # Add more examples with correct sentiment labels
         ("Thanks", 1),
         ("Correct", 1),
-        ("Noooooooo", 0),
-        ("Retry", 0),
+        ("Nooo", 0),
+        ("Repeat",0),
+        ("Nice",1),
+        ("This is it!",1),
+        ("Redo", 0),
+        ("I rejoice in the answer",1),
         ("Retry", 0)  # Adding "Retry" as a negative example
     ]
 
@@ -64,23 +71,28 @@ def model_use(raw_input, model):
     print(['neg' if max(i) == i[0] else 'pos' for i in predictions])
     return
 
+def sentiment():    
+    # Check if the 'model' folder exists and contains a model
+    model_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), "model")
+    model_path = os.path.join(model_folder, "my_model")
 
-# Check if the 'model' folder exists and contains a model
-model_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), "model")
-model_path = os.path.join(model_folder, "my_model")
+    if os.path.exists(model_folder):
+        # Load the existing model
+         model = TFAutoModelForSequenceClassification.from_pretrained('distilbert-base-uncased')
+         model.load_weights(model_path)
+         print("Model loaded successfully.")
 
-if os.path.exists(model_folder):
-    # Load the existing model
-     model = TFAutoModelForSequenceClassification.from_pretrained('distilbert-base-uncased')
-     model.load_weights(model_path)
-     print("Model loaded successfully.")
+    else:
+        model = model_create()  # Assuming model_create() creates a new model instance
+        model.save_weights(model_path)
+        print("Model saved successfully.")
+    return model
 
-else:
-    model = model_create()  # Assuming model_create() creates a new model instance
-    model.save_weights(model_path)
-    print("Model saved successfully.")
-
-model_use("That person was mean.", model)
-model_use("Screw off", model)
-model_use("This is what I wanted", model)
-model_use("Die", model)
+if __name__ == "__main__":  
+    model = sentiment()
+    model_use("That person was mean.", model)
+    model_use("Rejecting the result", model)
+    model_use("Redo my question", model)
+    model_use("That was incorrect", model)
+    model_use("I am satisfied", model)
+    model_use("Rejoice", model)

@@ -1,3 +1,4 @@
+from torch.nn.utils.rnn import pad_sequence
 import os
 import torch
 from torch.utils.data import DataLoader,Dataset
@@ -28,32 +29,50 @@ def LoadBERTModel(BERT_model_filepath):
     return BERT_model
 
 class QADataset(Dataset):
-    def __init__(self, questions, answers, b, c, v, tokenizer):
+    def __init__(self,questions,answers, b, c, v, tokenizer):
         self.questions = questions
         self.answers = answers
         self.b = b
         self.c = c
         self.v = v
         self.tokenizer = tokenizer
-        return
 
     def __len__(self):
         return len(self.questions)
 
     def __getitem__(self, idx):
-        encoding = self.tokenizer(
-            self.questions[idx],
-            self.answers[idx],
-            return_tensors="pt",
+        question = str(self.questions[idx])
+        answer = str(self.answers[idx])
+
+        encoding = self.tokenizer.encode_plus(
+            text=question,
+            text_pair=answer,
             truncation=True,
-            padding=True,
+            padding="longest",
             max_length=512,
+            return_tensors="pt"
         )
-        encoding["b"] = torch.tensor(self.b[idx])
-        encoding["c"] = torch.tensor(self.c[idx])
-        encoding["v"] = torch.tensor(self.v[idx])
-        return encoding
-    
+
+        return {
+            "input_ids": encoding["input_ids"].squeeze(),
+            "attention_mask": encoding["attention_mask"].squeeze(),
+            "start_positions": torch.tensor(0),  # Adjust as needed
+            "end_positions": torch.tensor(0)  # Adjust as needed
+        }
+
+def custom_collate(batch):
+    input_ids = pad_sequence([item["input_ids"] for item in batch], batch_first=True)
+    attention_mask = pad_sequence([item["attention_mask"] for item in batch], batch_first=True)
+    start_positions = torch.stack([item["start_positions"] for item in batch])
+    end_positions = torch.stack([item["end_positions"] for item in batch])
+
+    return {
+        "input_ids": input_ids,
+        "attention_mask": attention_mask,
+        "start_positions": start_positions,
+        "end_positions": end_positions,
+    }
+
 def CreateTrainAndTestLoader(prepared_Q_and_A_DF,train_loader_fine_tuned_filepath,test_loader_fine_tuned_filepath):
     train_size_value = 0.7
     
@@ -71,8 +90,8 @@ def CreateTrainAndTestLoader(prepared_Q_and_A_DF,train_loader_fine_tuned_filepat
     test_size = len(Q_and_A_dataset) - train_size
     train_dataset, test_dataset = torch.utils.data.random_split(Q_and_A_dataset, [train_size, test_size])
 
-    train_loader_fine_tuned = DataLoader(train_dataset, batch_size=8, shuffle=True)
-    test_loader_fine_tuned = DataLoader(test_dataset, batch_size=8, shuffle=False)
+    train_loader_fine_tuned = DataLoader(train_dataset, batch_size=8, shuffle=True, collate_fn=custom_collate)
+    test_loader_fine_tuned = DataLoader(test_dataset, batch_size=8, shuffle=False, collate_fn=custom_collate)
     torch.save(train_loader_fine_tuned,train_loader_fine_tuned_filepath)
     torch.save(test_loader_fine_tuned,test_loader_fine_tuned_filepath)
     return train_loader_fine_tuned,test_loader_fine_tuned
@@ -93,29 +112,37 @@ def CreateBERTModelFineTuned(BERT_model_fine_tuned, train_loader_fine_tuned, tes
     num_epochs = 3
 
     checkpoint_filepath = BERT_model_fine_tuned_filepath + '_checkpoint.pth'
-    if torch.cuda.is_available():
-        checkpoint = torch.load(checkpoint_filepath)
+    if os.path.exists(checkpoint_filepath):
+        if torch.cuda.is_available():
+            checkpoint = torch.load(checkpoint_filepath)
+        else:
+            checkpoint = torch.load(checkpoint_filepath, map_location=torch.device('cpu'))
+        start_epoch = checkpoint.get('epoch',0)
+        BERT_model_fine_tuned.load_state_dict(checkpoint['model_state_dict'])
+        optimizer = AdamW(BERT_model_fine_tuned.parameters(),lr=5e-5)
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        average_train_loss_fine_tuned_list = checkpoint.get('train_loss_list', [])
+        average_test_loss_fine_tuned_list = checkpoint.get('test_loss_list', [])
     else:
-        checkpoint = torch.load(checkpoint_filepath, map_location=torch.device('cpu'))
+        start_epoch = 0
+        optimizer = AdamW(BERT_model_fine_tuned.parameters(), lr=5e-5)
+        average_train_loss_fine_tuned_list = []
+        average_test_loss_fine_tuned_list = []
+        checkpoint = {}
 
-    start_epoch = checkpoint.get('epoch', 0)
-    BERT_model_fine_tuned.load_state_dict(checkpoint['model_state_dict'])
-    optimizer = AdamW(BERT_model_fine_tuned.parameters(), lr=5e-5)
-    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-    average_train_loss_fine_tuned_list = checkpoint.get('train_loss_list', [])
-    average_test_loss_fine_tuned_list = checkpoint.get('test_loss_list', [])
-
-    for epoch in range(start_epoch, num_epochs):
+    for epoch in range(start_epoch,num_epochs):
         BERT_model_fine_tuned.train()
         total_train_loss = 0.0
         for batch in train_loader_fine_tuned:
             optimizer.zero_grad()
-            outputs = BERT_model_fine_tuned(**batch, start_positions=batch['start_positions'], end_positions=batch['end_positions'])
+            batch['input_ids'] = batch['input_ids'].squeeze(1)
+            batch['attention_mask'] = batch['attention_mask'].squeeze(1)   
+            outputs = BERT_model_fine_tuned(**batch)
             loss = outputs.loss
             loss.backward()
             optimizer.step()
             total_train_loss += loss.item()
-        average_train_loss_fine_tuned = total_train_loss / len(train_loader_fine_tuned)
+        average_train_loss_fine_tuned = total_train_loss/len(train_loader_fine_tuned)
         average_train_loss_fine_tuned_list.append(average_train_loss_fine_tuned)
         print(f'Epoch {epoch + 1}/{num_epochs}, Training Loss: {average_train_loss_fine_tuned}')
 
@@ -123,18 +150,19 @@ def CreateBERTModelFineTuned(BERT_model_fine_tuned, train_loader_fine_tuned, tes
         total_test_loss = 0.0
         with torch.no_grad():
             for batch in test_loader_fine_tuned:
-                outputs = BERT_model_fine_tuned(**batch, start_positions=batch['start_positions'], end_positions=batch['end_positions'])
+                batch['input_ids'] = batch['input_ids'].squeeze(1)
+                batch['attention_mask'] = batch['attention_mask'].squeeze(1) 
+                outputs = BERT_model_fine_tuned(**batch)
                 total_test_loss += outputs.loss.item()
-        average_test_loss_fine_tuned = total_test_loss / len(test_loader_fine_tuned)
+        average_test_loss_fine_tuned = total_test_loss/len(test_loader_fine_tuned)
         average_test_loss_fine_tuned_list.append(average_test_loss_fine_tuned)
         print(f'Epoch {epoch + 1}/{num_epochs}, Testing Loss: {average_test_loss_fine_tuned}')
-
         torch.save({
             'epoch': epoch + 1,
             'model_state_dict': BERT_model_fine_tuned.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'train_loss_list': average_train_loss_fine_tuned_list,
-            'test_loss_list': average_test_loss_fine_tuned_list,
+            'test_loss_list': average_test_loss_fine_tuned_list
         }, checkpoint_filepath)
 
     BERT_model_fine_tuned.save_pretrained(BERT_model_fine_tuned_filepath)
