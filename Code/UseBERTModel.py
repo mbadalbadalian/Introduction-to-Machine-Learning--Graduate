@@ -87,6 +87,9 @@ if __name__ == "__main__":
     #Main Code
     fine_tuned_model,tokenizer = LoadFineTunedBERTModel(model_path)
     context = LoadContext(ESV_Bible_DF_filepath)
-    question = input("Ask a question: ")
-    predicted_answer = PredictAnswerNoChunks(fine_tuned_model, tokenizer, context, question)
-    print("Predicted Answer:", predicted_answer)
+    questions = ["Who is the mother of Jesus?","Who is the son of Judah?"]
+    
+    for question in questions:
+        answer = PredictAnswerNoChunks(fine_tuned_model,tokenizer,context,question)
+        print("Question:", question)
+        print("Answer:", answer)
