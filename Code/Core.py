@@ -30,9 +30,9 @@ if __name__ == "__main__":
                   'I am supposed to answer verses from the Bible and Bhagwad Gita in response to user questions',
                   'I work using DistilBERT and Zero Shot Classification',
                   'I work using DistilBERT and Zero Shot Classification',
-                  'Sure thing \nloading in the ML model now!! \n',
+                  'Sure thing \nloading in the ML model now!!',
                    'Thank you for using our chatbot' ,
-                   'Sure thing \nloading in the ML model now!! \n',
+                   'Sure thing \nloading in the ML model now!!',
                    'Thank you for using our chatbot']
     labels1 = ['greeting', 'creator', 'functions', 'What you do','architecture', 'How you work', 'want to ask a question about the Bible','No', 'want to ask a question about the Bhagwad Gita','No Questions']
     print('If you want to ask questions about the Bible or Bhagwad Gita, let me know first')
