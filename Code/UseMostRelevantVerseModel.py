@@ -17,7 +17,7 @@ def LoadBibleDFAndText(ESV_ESV_Bible_DF_filepath):
     ESV_Bible_text = ESV_Bible_DF['Text'].tolist()
     return ESV_Bible_DF,ESV_Bible_text
 
-def calculate_bible_embeddings(ESV_Bible_text, model, tokenizer):
+def CalculateBibleEmbeddings(ESV_Bible_text, model, tokenizer):
     encoded_bible = tokenizer(ESV_Bible_text, return_tensors='pt', padding=True, truncation=True)
 
     with torch.no_grad():
@@ -30,7 +30,7 @@ def save_and_load_embeddings(bible_embeddings, file_path):
     loaded_embeddings = torch.load(file_path)
     return loaded_embeddings
 
-def process_question(question, model, tokenizer, bible_embeddings, ESV_Bible_DF, bible_books):
+def ProcessQuestion(question, model, tokenizer, bible_embeddings, ESV_Bible_DF, bible_books):
     encoded_question = tokenizer(question, return_tensors='pt', padding=True, truncation=True)
 
     with torch.no_grad():
@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     # Calculate and save Bible embeddings
     ESV_Bible_DF,ESV_Bible_text = LoadBibleDFAndText(ESV_ESV_Bible_DF_filepath)
-    bible_embeddings = calculate_bible_embeddings(ESV_Bible_text,model,tokenizer)
+    bible_embeddings = CalculateBibleEmbeddings(ESV_Bible_text,model,tokenizer)
     save_and_load_embeddings(bible_embeddings, 'bible_embeddings_original.pt')
 
     # Example questions
@@ -70,5 +70,5 @@ if __name__ == "__main__":
 
     # Process each question
     for question in questions:
-        answer = process_question(question,model,tokenizer,bible_embeddings,ESV_Bible_DF,bible_books)
+        answer = ProcessQuestion(question,model,tokenizer,bible_embeddings,ESV_Bible_DF,bible_books)
         print(answer)
