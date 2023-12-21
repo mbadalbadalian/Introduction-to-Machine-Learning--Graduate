@@ -37,6 +37,7 @@ def responses(responses,scores):
     if scores[score]<0.35:
         print('Sorry!! Can you be more specific.')
         print('If your question is about the bible , please let me know')
+        score = 0
     else:
         print(responses[score])
     return score

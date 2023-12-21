@@ -25,27 +25,27 @@ def Religious_Questions(model,book):
 if __name__ == "__main__":  
     model = Sentiment.sentiment()
     responses = ['Hello! It is a pleasure meeting you',
-                  'I was made by Chris Verghese and Matthew Badal-Badalion',
-                  'I am supposed to answer verses from the bible in response to user questions',
-                  'I am supposed to answer verses from the bible in response to user questions',
-                  'I work using BERT and Zero Shot Classification',
-                  'I work using BERT and Zero Shot Classification',
-                  'I am unable to properly function right now',
+                  'I was made by Chris Binoi Verghese and Matthew Badal-Badalian',
+                  'I am supposed to answer verses from the Bible and Bhagwad Gita in response to user questions',
+                  'I am supposed to answer verses from the Bible and Bhagwad Gita in response to user questions',
+                  'I work using DistilBERT and Zero Shot Classification',
+                  'I work using DistilBERT and Zero Shot Classification',
                   'Sure thing \nloading in the ML model now!! \n',
                    'Thank you for using our chatbot' ,
-                   'Sure thing \nloading in the ML model now!! \n']
-    labels1 = ['greeting', 'creator', 'functions', 'What you do','architecture', 'How you work','weakness', 'want to ask a question about the Bible','No', 'want to ask a question about the Bhagwad Gita']
+                   'Sure thing \nloading in the ML model now!! \n',
+                   'Thank you for using our chatbot']
+    labels1 = ['greeting', 'creator', 'functions', 'What you do','architecture', 'How you work', 'want to ask a question about the Bible','No', 'want to ask a question about the Bhagwad Gita','No Questions']
     print('If you want to ask questions about the Bible or Bhagwad Gita, let me know first')
     while(True):
     # Accepting string input from the user
         user_input = input("Any Questions: (Enter 'No' to leave)\n")
         labels, scores = Base_Chatbot.zero_shot_classification(user_input,labels1)
         label_ind = Base_Chatbot.responses(responses,scores)
-        if label_ind == 7:
+        if label_ind == 6:
             Religious_Questions(model,0)
-        if label_ind == 9:
+        elif label_ind == 8:
             Religious_Questions(model,1)
-        if label_ind == 8:
+        elif label_ind == 7 or label_ind == 9:
             break
 
 

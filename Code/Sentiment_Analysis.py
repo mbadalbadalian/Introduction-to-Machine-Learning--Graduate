@@ -201,9 +201,10 @@ def sentiment():
 
 if __name__ == "__main__":  
     model = sentiment()
-    print(model_use("That person was mean.", model))
-    print(model_use("Rejecting the result", model))
-    print(model_use("Redo my question", model))
-    print(model_use("That was incorrect", model))
-    print(model_use("I am satisfied", model))
-    print(model_use("Rejoice", model))
+    print("Demonstration of working of the Sentiment Analysis")
+    print("This is not what I was looking for: " , model_use("This is not what I was looking for", model))
+    print("Again: ",model_use("Again", model))
+    print("This is perfect: ", model_use("This is perfect", model))
+    print("That was incorrect: ", model_use("That was incorrect", model))
+    print("I am satisfied:", model_use("I am satisfied", model))
+ 
