@@ -2,6 +2,7 @@ from transformers import AutoTokenizer, TFAutoModelForSequenceClassification
 import tensorflow as tf
 import os
 import warnings
+import matplotlib.pyplot as plt
 
 # To suppress all warnings
 warnings.filterwarnings("ignore")
@@ -11,15 +12,15 @@ def model_create():
 
     # Original inputs including "Retry"
     raw_inputs = [
-        "This is not what I want",
-        "Thanks",
-        "Correct",
-        "Noooooooo",
-        "Repeat",
-        "Nice",
-        "Redo",
-        "I rejoice in the answer"
-        "Retry"  # Adding "Retry" as a negative example
+        "This is not what I wanted here",
+        "Thanks a lot",
+        "Correct answer",
+        "Nooooooooooo",
+        "Repeat that step",
+        "Nice work",
+        "Redo everything",
+        "I rejoice in the correctness of the answer"
+        "Retry this algorithm"  
     ]
 
     # Fine-tuning data including "Retry" as a negative example
@@ -27,7 +28,7 @@ def model_create():
         ("This is not what I want", 0),  # Add more examples with correct sentiment labels
         ("Thanks", 1),
         ("Correct", 1),
-        ("Nooo", 0),
+        ("No", 0),
         ("Repeat",0),
         ("Nice",1),
         ("This is it!",1),
@@ -151,21 +152,58 @@ def model_create():
     tokenizer_ft = AutoTokenizer.from_pretrained(checkpoint)
     inputs_ft = tokenizer_ft(fine_tuning_texts, padding=True, truncation=True, return_tensors="tf")
 
-    # Extract tensors from the BatchEncoding object
-    inputs_ft = (inputs_ft["input_ids"], inputs_ft["attention_mask"])
+    # Split the data into training and validation sets
+    validation_split = 0.2  # 20% of the data for validation
+    num_samples = len(fine_tuning_labels)
+    num_validation_samples = int(validation_split * num_samples)
+
+    train_inputs = (inputs_ft["input_ids"][:num_samples - num_validation_samples], inputs_ft["attention_mask"][:num_samples - num_validation_samples])
+    train_labels = fine_tuning_labels[:-num_validation_samples]
+
+    val_inputs = (inputs_ft["input_ids"][-num_validation_samples:], inputs_ft["attention_mask"][-num_validation_samples:])
+    val_labels = fine_tuning_labels[-num_validation_samples:]
+
+    # Convert input_ids and attention_mask to tensors
+    train_input_ids_tensor = tf.convert_to_tensor(train_inputs[0])
+    train_attention_mask_tensor = tf.convert_to_tensor(train_inputs[1])
+    val_input_ids_tensor = tf.convert_to_tensor(val_inputs[0])
+    val_attention_mask_tensor = tf.convert_to_tensor(val_inputs[1])
 
     # Fine-tune the model with additional data
     model_ft = TFAutoModelForSequenceClassification.from_pretrained(checkpoint)
     optimizer = tf.keras.optimizers.Adam(learning_rate=1e-5)
     loss = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
     model_ft.compile(optimizer=optimizer, loss=loss)
-    model_ft.fit(inputs_ft, fine_tuning_labels, epochs=3)  # Train for a few epochs with additional data
+
+    # Then use these tensors for model training
+    history = model_ft.fit(
+        (train_input_ids_tensor, train_attention_mask_tensor),
+        train_labels,
+        epochs=5,
+        validation_data=((val_input_ids_tensor, val_attention_mask_tensor), val_labels)
+    )
+
+    # Print training and validation losses for each epoch
+    plt.figure(figsize=(8, 6))
+    plt.plot(history.history['loss'], label='Training Loss')
+    plt.plot(history.history['val_loss'], label='Validation Loss')
+    plt.title('Training and Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.show()
 
     # Make predictions with the fine-tuned model
     outputs = model_ft(inputs)
     predictions = tf.math.softmax(outputs.logits, axis=-1)
     sentiments = ['neg' if max(i) == i[0] else 'pos' for i in predictions]
-    print(sentiments)
+    sentiments_correct = ['neg', 'pos', 'pos', 'neg', 'neg', 'pos', 'neg', 'pos', 'neg']
+
+    # Calculate accuracy
+    correct_predictions = sum(1 for pred, correct in zip(sentiments, sentiments_correct) if pred == correct)
+    total_predictions = len(sentiments)
+    accuracy = correct_predictions / total_predictions
+    print("Test Accuracy:", accuracy)
     return model_ft
 
 def model_use(raw_input, model):
