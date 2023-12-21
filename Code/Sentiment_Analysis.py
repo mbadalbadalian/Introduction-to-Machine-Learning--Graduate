@@ -1,6 +1,10 @@
 from transformers import AutoTokenizer, TFAutoModelForSequenceClassification
 import tensorflow as tf
 import os
+import warnings
+
+# To suppress all warnings
+warnings.filterwarnings("ignore")
 
 def model_create():
     checkpoint = "distilbert-base-uncased-finetuned-sst-2-english"
@@ -31,6 +35,109 @@ def model_create():
         ("I rejoice in the answer",1),
         ("Retry", 0)  # Adding "Retry" as a negative example
     ]
+    fine_tuning_data.extend([
+    ("I'm not happy with this", 0),
+    ("Terrible", 0),
+    ("Unsatisfied", 0),
+    ("Displeased", 0),
+    ("That was awful", 0),
+    ("I'm dissatisfied", 0),
+    ("Worst", 0),
+    ("This is not right", 0),
+    ("I'm disappointed", 0),
+    ("Not good", 0),
+    ("I hate it", 0),
+    ("I dislike it", 0),
+    ("This is a failure", 0),
+    ("I'm not content", 0),
+    ("This is frustrating", 0),
+    ("Awful", 0),
+    ("Very bad", 0),
+    ("Not pleased", 0),
+    ("I'm angry", 0),
+    ("This is terrible", 0),
+    ("I'm not satisfied", 0),
+    ("I'm not happy", 0),
+    ("This is unacceptable", 0),
+    ("That was a mistake", 0),
+    ("I'm furious", 0),
+    ("This is wrong", 0),
+    ("Disappointed", 0),
+    ("Redo the algorithm",0),
+    ("I'm not okay with this", 0),
+    ("I'm upset", 0),
+    ("This is not satisfactory", 0),
+    ("I'm not pleased with this", 0),
+    ("This is not acceptable", 0),
+    ("I'm not content with this", 0),
+    ("This is awful", 0),
+    ("That's not good", 0),
+    ("This is not what I wanted", 0),
+    ("This is not what I expected", 0),
+    ("I'm not happy with the answer", 0),
+    ("I'm not satisfied with the answer", 0),
+    ("This is not the answer I wanted", 0),
+    ("I expected a better answer", 0),
+    ("This is not a good answer", 0),
+    ("This is not helpful", 0),
+    ("I'm disappointed with the answer", 0),
+    ("I'm not pleased with the answer", 0),
+    ("This is not a satisfactory answer", 0),
+    ("I'm not content with the answer", 0),
+    ("I'm upset with the answer", 0),
+    ("This is not what I was looking for", 0),
+    ("I'm not okay with the answer", 0),
+    ("This is not the answer I was expecting", 0),
+    ("That's not the right answer", 0),
+    ("This is not what I needed", 0),
+    ("I'm dissatisfied with the answer", 0),
+    ("This is not a good response", 0),
+    ("I'm not happy with this solution", 0),
+    ("I'm not satisfied with this solution", 0),
+    ("This is not the solution I wanted", 0),
+    ("I expected a better solution", 0),
+    ("This is not a good solution", 0),
+    ("This is not a helpful solution", 0),
+    ("I'm disappointed with this solution", 0),
+    ("I'm not pleased with this solution", 0),
+    ("This is not a satisfactory solution", 0),
+    ("I'm not content with this solution", 0),
+    ("I'm upset with this solution", 0),
+    ("This is not what I was expecting as a solution", 0),
+    ("That's not the right solution", 0),
+    ("This is not what I needed as a solution", 0),
+    ("I'm dissatisfied with this solution", 0),
+    ("This is not a good response as a solution", 0)])
+    fine_tuning_data.extend([
+    ("I'm happy with this", 1),
+    ("Great", 1),
+    ("Satisfied", 1),
+    ("Pleased", 1),
+    ("Wonderful", 1),
+    ("Awesome", 1),
+    ("Good job", 1),
+    ("I'm content", 1),
+    ("This is satisfactory", 1),
+    ("I'm delighted", 1),
+    ("I'm pleased with this", 1),
+    ("This is what I wanted", 1),
+    ("This is what I expected", 1),
+    ("I'm happy with the answer", 1),
+    ("I'm satisfied with the answer", 1),
+    ("This is the answer I wanted", 1),
+    ("This is a good answer", 1),
+    ("This is helpful", 1),
+    ("I'm pleased with the answer", 1),
+    ("This is a satisfactory answer", 1),
+    ("I'm content with the answer", 1),
+    ("I'm happy with this solution", 1),
+    ("I'm satisfied with this solution", 1),
+    ("This is the solution I wanted", 1),
+    ("This is a good solution", 1),
+    ("This is a helpful solution", 1),
+    ("I'm pleased with this solution", 1),
+    ("This is a satisfactory solution", 1),
+    ("I'm content with this solution", 1)])
 
 
     tokenizer = AutoTokenizer.from_pretrained(checkpoint)
@@ -68,8 +175,12 @@ def model_use(raw_input, model):
     inputs = (batch_encoding["input_ids"], batch_encoding["attention_mask"])
     outputs = model(inputs)
     predictions = tf.math.softmax(outputs.logits, axis=-1)
-    print(['neg' if max(i) == i[0] else 'pos' for i in predictions])
-    return
+    #print(['neg' if max(i) == i[0] else 'pos' for i in predictions])
+     # Get the index of the maximum value in predictions[0]
+    max_index = tf.argmax(predictions[0], axis=-1).numpy()
+    # Assign sentiment based on the max_index
+    sentiment = 'neg' if max_index == 0 else 'pos'
+    return sentiment
 
 def sentiment():    
     # Check if the 'model' folder exists and contains a model
@@ -90,9 +201,9 @@ def sentiment():
 
 if __name__ == "__main__":  
     model = sentiment()
-    model_use("That person was mean.", model)
-    model_use("Rejecting the result", model)
-    model_use("Redo my question", model)
-    model_use("That was incorrect", model)
-    model_use("I am satisfied", model)
-    model_use("Rejoice", model)
+    print(model_use("That person was mean.", model))
+    print(model_use("Rejecting the result", model))
+    print(model_use("Redo my question", model))
+    print(model_use("That was incorrect", model))
+    print(model_use("I am satisfied", model))
+    print(model_use("Rejoice", model))

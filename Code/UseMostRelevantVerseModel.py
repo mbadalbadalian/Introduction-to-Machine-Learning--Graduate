@@ -71,14 +71,14 @@ if __name__ == "__main__":
     bible_books = load_bible_books(ESV_Bible_Book_id_filepath)
 
     # Extract text and metadata columns
-    bible_data = bible_data[(bible_data['b'] == 40) & (bible_data['c'] == 1)]
+    #bible_text = bible_data['Text'][bible_data['b'] == 1][bible_data['c'] == 1].tolist()
     bible_text = bible_data['Text'].tolist()
 
     # Load BERT model and tokenizer
     model, tokenizer = load_bert_model_and_tokenizer(BERT_most_relevant_verse_model_fine_tuned_filepath)
 
     # Calculate and save Bible embeddings
-    bible_embeddings = calculate_bible_embeddings(bible_text,model,tokenizer)
+    bible_embeddings = calculate_bible_embeddings(bible_text, model, tokenizer)
     save_and_load_embeddings(bible_embeddings, 'bible_embeddings_original.pt')
 
     # Example questions
