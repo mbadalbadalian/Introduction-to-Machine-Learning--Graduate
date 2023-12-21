@@ -8,7 +8,7 @@ def LoadDF(DF_path):
     return dataframe
 
 def CreatePreparedQAndAData(Q_and_A_DF,ESV_Bible_DF,ESV_Bible_Book_id_DF,book_mapping_csv_filepath,prepared_Q_and_A_DF_filepath):
-    prepared_Q_and_A_DF = pd.DataFrame(columns=['Questions', 'Answers', 'b', 'c', 'v'])
+    prepared_Q_and_A_DF = pd.DataFrame(columns=['Questions','Answers','b','c','v'])
     prepared_Q_and_A_DF[['prefix', 'b', 'cv']] = Q_and_A_DF['Answers'].str.extract(r'(\d+\s)?(\w+) (\d+:\d+)')
     prepared_Q_and_A_DF['b_full'] = prepared_Q_and_A_DF['prefix'].fillna('') + prepared_Q_and_A_DF['b'].fillna('')
     prepared_Q_and_A_DF['b'] = prepared_Q_and_A_DF['b_full']
@@ -33,7 +33,6 @@ def CreatePreparedQAndAData(Q_and_A_DF,ESV_Bible_DF,ESV_Bible_Book_id_DF,book_ma
     prepared_Q_and_A_DF = pd.merge(prepared_Q_and_A_DF,ESV_Bible_DF,on=['b', 'c', 'v'])
     prepared_Q_and_A_DF.to_csv(prepared_Q_and_A_DF_filepath, index=False)
     return prepared_Q_and_A_DF
-
 
 def CreateOrLoadTokenizedData(Q_and_A_DF,ESV_Bible_DF,ESV_Bible_Book_id_DF,book_mapping_csv_filepath,prepared_Q_and_A_DF_filepath,create_or_load_string='load'):
     if create_or_load_string in ['Create','create']:
